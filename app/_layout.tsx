@@ -16,6 +16,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/Text';
 import { db, migrations } from '@/db/client';
+import { seedNutrition } from '@/db/seed/nutrition';
 import { applyRtl, needsRtlReload, reloadForRtl } from '@/lib/rtl';
 import { space, useColors, useScheme } from '@/theme';
 
@@ -54,6 +55,12 @@ export default function RootLayout() {
       cancelled = true;
     };
   }, [rtl]);
+
+  // The plan is written once, into an empty database. seedNutrition refuses to
+  // run if any food already exists, so it can never clobber later edits.
+  useEffect(() => {
+    if (migrated) seedNutrition();
+  }, [migrated]);
 
   const ready = (fontsLoaded || Boolean(fontError)) && migrated && rtl === 'ok';
 

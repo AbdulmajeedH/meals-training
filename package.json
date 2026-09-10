@@ -9,10 +9,11 @@
     "ios": "expo start --ios",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test src/lib/*.test.ts",
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
     "db:generate": "drizzle-kit generate",
     "db:check": "node scripts/schema-check.mjs",
-    "verify": "npm run typecheck && npm run lint && npm test && npm run db:check"
+    "verify": "npm run typecheck && npm run lint && npm test && npm run db:check",
+    "plan:totals": "node --experimental-strip-types scripts/plan-totals.ts"
   },
   "dependencies": {
     "@expo-google-fonts/ibm-plex-sans-arabic": "^0.4.2",
