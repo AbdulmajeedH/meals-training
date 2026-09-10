@@ -33,6 +33,7 @@ npm run verify   # typecheck + lint + الاختبارات + فحص قاعدة �
 | `npm run lint` | ESLint عبر `expo lint` |
 | `npm test` | اختبارات المنطق الصِّرف عبر مشغّل Node المدمج (بدون مكتبة اختبار) |
 | `npm run db:check` | يطبّق الـ migration على SQLite حقيقية ويتحقق من القيود والعلاقات |
+| `npm run seed:check` | يكتب الخطة المزروعة في SQLite حقيقية ويتحقق من مجاميعها |
 | `npm run db:generate` | يولّد migration بعد تعديل `src/db/schema.ts` |
 | `npm run plan:totals` | يطبع ماكروز كل يوم من أيام الخطة المزروعة |
 
