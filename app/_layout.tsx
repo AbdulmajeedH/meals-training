@@ -17,12 +17,16 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Text } from '@/components/Text';
 import { db, migrations } from '@/db/client';
 import { seedNutrition } from '@/db/seed/nutrition';
+import { configureNotificationHandler } from '@/notifications/reminders';
 import { applyRtl, needsRtlReload, reloadForRtl } from '@/lib/rtl';
 import { space, useColors, useScheme } from '@/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Already hidden — nothing to do.
 });
+
+// A reminder that arrives while the app is open should still be visible.
+configureNotificationHandler();
 
 export default function RootLayout() {
   const colors = useColors();

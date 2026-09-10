@@ -25,6 +25,11 @@ const ROWS: Row[] = [
     title: 'قوالب الأيام',
     subtitle: 'يوم كامل من الوجبات، يُعاد استخدامه',
   },
+  {
+    href: '/settings/reminders',
+    title: 'التذكيرات',
+    subtitle: 'أوقات الوجبات والتمرين ومراجعة الخميس',
+  },
 ];
 
 export default function SettingsScreen() {
