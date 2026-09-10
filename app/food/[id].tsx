@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { ActivityIndicator, Alert, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -9,8 +9,10 @@ import { PressableScale } from '@/components/PressableScale';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
 import { useDbQuery } from '@/db/useQuery';
+import { CONFIDENCE_LABEL_AR, estimateFood } from '@/lib/foodEstimate';
 import { kcalFromMacros } from '@/lib/macros';
-import { n } from '@/lib/num';
+import { d, n } from '@/lib/num';
+import { isConfigured } from '@/lib/supabase';
 import { archiveFood, deleteFood, listFoods, upsertFood } from '@/queries/meals';
 import { space } from '@/theme';
 
@@ -32,6 +34,10 @@ export default function FoodEditorScreen() {
   const [protein, setProtein] = useState(existing ? String(existing.proteinG) : '');
   const [carbs, setCarbs] = useState(existing ? String(existing.carbsG) : '');
   const [fat, setFat] = useState(existing ? String(existing.fatG) : '');
+
+  const [description, setDescription] = useState('');
+  const [estimating, setEstimating] = useState(false);
+  const [estimateNote, setEstimateNote] = useState<string | null>(null);
 
   const parsed = {
     kcal: Number(kcal),
@@ -61,6 +67,72 @@ export default function FoodEditorScreen() {
       }
     >
       <View style={{ gap: space.lg }}>
+        {isNew && isConfigured() ? (
+          <Card>
+            <View style={{ gap: space.md }}>
+              <View style={{ gap: 2 }}>
+                <Text variant="heading">اكتب وصف الطعام</Text>
+                <Text variant="caption" color="textDim">
+                  تقدير تقريبي يملأ الحقول، وتبقى المراجعة عليك.
+                </Text>
+              </View>
+
+              <Field
+                label="الوصف"
+                value={description}
+                onChangeText={setDescription}
+                placeholder="مثال: صدر دجاج مشوي 150 جم"
+              />
+
+              {estimating ? (
+                <ActivityIndicator />
+              ) : (
+                <Button
+                  title="قدّر الماكروز"
+                  variant="secondary"
+                  disabled={description.trim().length === 0}
+                  onPress={async () => {
+                    setEstimating(true);
+                    setEstimateNote(null);
+                    const result = await estimateFood(description.trim());
+                    setEstimating(false);
+
+                    if (!result.ok) {
+                      Alert.alert(
+                        'تعذّر التقدير',
+                        result.reason === 'not_configured'
+                          ? 'لم تُضبط إعدادات Supabase.'
+                          : result.reason === 'refused'
+                            ? 'لم يستطع النموذج تقدير هذا الوصف.'
+                            : 'تحقّق من الاتصال وحاول مرة أخرى.',
+                      );
+                      return;
+                    }
+
+                    // Fill the form rather than saving: an estimate is a draft.
+                    const { estimate } = result;
+                    setNameAr(estimate.nameAr);
+                    setServingLabel(estimate.servingLabel);
+                    setKcal(d(estimate.kcal, 0));
+                    setProtein(d(estimate.proteinG));
+                    setCarbs(d(estimate.carbsG));
+                    setFat(d(estimate.fatG));
+                    setEstimateNote(
+                      `${CONFIDENCE_LABEL_AR[estimate.confidence]} · ${estimate.note}`,
+                    );
+                  }}
+                />
+              )}
+
+              {estimateNote ? (
+                <Text variant="caption" color="warn">
+                  {estimateNote}
+                </Text>
+              ) : null}
+            </View>
+          </Card>
+        ) : null}
+
         <Card>
           <View style={{ gap: space.md }}>
             <Field label="الاسم" value={nameAr} onChangeText={setNameAr} placeholder="مثال: صدر دجاج" />

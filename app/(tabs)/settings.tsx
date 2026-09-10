@@ -30,6 +30,11 @@ const ROWS: Row[] = [
     title: 'التذكيرات',
     subtitle: 'أوقات الوجبات والتمرين ومراجعة الخميس',
   },
+  {
+    href: '/settings/backup',
+    title: 'النسخ الاحتياطي',
+    subtitle: 'تصدير واستيراد JSON، ونسخة على Supabase',
+  },
 ];
 
 export default function SettingsScreen() {

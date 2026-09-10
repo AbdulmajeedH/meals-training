@@ -3,7 +3,8 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = [
   ...expoConfig,
   {
-    ignores: ['dist/*', 'drizzle/*', 'node_modules/*', '.expo/*'],
+    // supabase/ is Deno, not React Native — it has its own runtime and globals.
+    ignores: ['dist/*', 'drizzle/*', 'node_modules/*', '.expo/*', 'supabase/*'],
   },
   {
     // Reanimated's public API is assignment to `sharedValue.value`, which the

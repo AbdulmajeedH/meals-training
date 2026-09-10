@@ -14,7 +14,11 @@ Not a product for others: no auth, no onboarding, no multi-user support.
 - Local-first: `expo-sqlite` + Drizzle ORM. All data on-device; the app works fully offline.
 - UI state: Zustand. The database is the source of truth.
 - Motion: `react-native-reanimated` (springs), `react-native-gesture-handler`, `expo-haptics`.
-- Charts: `victory-native` (Skia). Keep it light.
+- Charts: `react-native-svg`, drawn by hand. Keep it light.
+  (Not `victory-native`: it needs `@shopify/react-native-skia`, which Expo Go
+  does not bundle, and Expo Go is the device test loop. The charts here —
+  monthly heatmap, weight trend, macro rings — are simple enough to draw
+  directly.)
 - Notifications: `expo-notifications` (local only). Calendar: `expo-calendar` (Phase 4).
 - Phase 5 only: Supabase for backup + an Edge Function that proxies the Claude API for food estimation. Never ship API keys inside the app.
 

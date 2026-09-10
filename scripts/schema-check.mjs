@@ -57,5 +57,20 @@ console.log('after clean delete — exercises:', leftExercises, 'schedule slot:'
 if (leftExercises !== 0) { console.log('FAIL: exercises not cascaded'); failures++; }
 if (scheduleRow !== null) { console.log('FAIL: schedule not nulled'); failures++; }
 
+// The backup must cover every table; a table missing from that list would be
+// silently absent from every export.
+const backupSource = readFileSync('src/db/backup.ts', 'utf8');
+const listed = new Set(
+  (backupSource.match(/const TABLES = \[([\s\S]*?)\] as const;/)?.[1] ?? '')
+    .split(',')
+    .map((entry) => entry.trim().replace(/^'|'$/g, ''))
+    .filter(Boolean),
+);
+const missing = tables.filter((name) => !listed.has(name));
+const extra = [...listed].filter((name) => !tables.includes(name));
+if (missing.length) { console.log('FAIL: not in backup TABLES:', missing.join(', ')); failures++; }
+if (extra.length) { console.log('FAIL: in backup TABLES but not in schema:', extra.join(', ')); failures++; }
+if (!missing.length && !extra.length) console.log('ok  backup covers all', tables.length, 'tables');
+
 console.log(failures === 0 ? '\nALL SCHEMA CHECKS PASSED' : `\n${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);
