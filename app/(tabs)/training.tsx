@@ -15,6 +15,7 @@ import { useDbQuery } from '@/db/useQuery';
 import { formatDayAr, today } from '@/lib/date';
 import { d, n } from '@/lib/num';
 import type { SetLog } from '@/db/schema';
+import { hasSchedule } from '@/db/seed/program';
 import {
   applyWeightToRemaining,
   finishSession,
@@ -41,10 +42,16 @@ export default function TrainingScreen() {
     }, []),
   );
 
-  const programExists = useDbQuery(() => hasProgram(), []);
+  const { programExists, scheduled } = useDbQuery(
+    () => ({ programExists: hasProgram(), scheduled: hasSchedule() }),
+    [],
+  );
   const state = useDbQuery(() => (programExists ? getTodaySession(date) : null), [date, programExists]);
 
   if (!programExists) return <NoProgram />;
+  // No weekday has a program day yet: that is an unfinished setup, not a rest
+  // day, and it needs somewhere to go rather than a dead end.
+  if (!scheduled) return <NoSchedule />;
   if (!state) return null;
   if (state.kind === 'rest') return <RestDay date={date} />;
 
@@ -137,6 +144,7 @@ type ExerciseBlockProps = {
 function ExerciseBlock({ item, disabled, onToggleSet, onEditSet, onWeightChange }: ExerciseBlockProps) {
   const colors = useColors();
   const { exercise, sets, last, suggestion } = item;
+  const timed = exercise.repUnit === 'seconds';
 
   // The working weight is whatever the not-yet-done sets are carrying.
   const pending = sets.find((s) => !s.done) ?? sets[sets.length - 1];
@@ -149,8 +157,16 @@ function ExerciseBlock({ item, disabled, onToggleSet, onEditSet, onWeightChange 
           <View style={{ flex: 1, gap: 2 }}>
             <Text variant="heading">{exercise.name}</Text>
             <Text variant="caption" color="textDim">
-              {`${n(exercise.sets)} × ${n(exercise.repMin)}–${n(exercise.repMax)}`}
-              {last.weightKg != null ? ` · آخر مرة ${d(last.weightKg)} × ${n(last.reps ?? 0)}` : ' · أول مرة'}
+              {timed
+                ? `${n(exercise.sets)} × ${n(exercise.repMin)} ث`
+                : exercise.repMin === exercise.repMax
+                  ? `${n(exercise.sets)} × ${n(exercise.repMin)}`
+                  : `${n(exercise.sets)} × ${n(exercise.repMin)}–${n(exercise.repMax)}`}
+              {timed
+                ? ''
+                : last.weightKg != null
+                  ? ` · آخر مرة ${d(last.weightKg)} × ${n(last.reps ?? 0)}`
+                  : ' · أول مرة'}
             </Text>
           </View>
         </View>
@@ -187,13 +203,14 @@ function ExerciseBlock({ item, disabled, onToggleSet, onEditSet, onWeightChange 
             <SetChip
               key={set.id}
               set={set}
+              repUnit={exercise.repUnit}
               onToggle={() => !disabled && onToggleSet(set)}
               onEdit={() => !disabled && onEditSet(set)}
             />
           ))}
         </View>
 
-        {!disabled ? (
+        {!disabled && !timed ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Stepper
               label="وزن المجموعات المتبقية"
@@ -220,6 +237,32 @@ function RestDay({ date }: { date: string }) {
           <Text variant="body" color="textDim" align="center">
             لا يوجد تمرين مجدول اليوم.
           </Text>
+        </View>
+      </Card>
+    </Screen>
+  );
+}
+
+function NoSchedule() {
+  return (
+    <Screen title="التمارين">
+      <Card>
+        <View style={{ alignItems: 'center', gap: space.md, paddingVertical: space.xl }}>
+          <Text variant="title" align="center">
+            حدّد أيام التمرين
+          </Text>
+          <Text variant="body" color="textDim" align="center">
+            برنامجك جاهز بأيامه الخمسة، لكن لم تُحدَّد أيام الأسبوع بعد.
+          </Text>
+          <Link href="/settings/program" asChild>
+            <PressableScale haptic="light">
+              <View style={{ paddingVertical: space.sm, paddingHorizontal: space.lg }}>
+                <Text variant="heading" color="accent">
+                  افتح جدول الأسبوع
+                </Text>
+              </View>
+            </PressableScale>
+          </Link>
         </View>
       </Card>
     </Screen>

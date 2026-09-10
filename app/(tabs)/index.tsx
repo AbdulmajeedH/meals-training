@@ -16,6 +16,7 @@ import { DAY_TYPE_LABEL_AR } from '@/lib/slots';
 import { confirmMeal, getDayLog, hasTargets } from '@/queries/meals';
 import { getTodaySession, hasProgram, programDayForDate } from '@/queries/training';
 import { setBusy } from '@/queries/plan';
+import { hasSchedule } from '@/db/seed/program';
 import { space, useColors } from '@/theme';
 
 /**
@@ -39,11 +40,12 @@ export default function TodayScreen() {
       day: getDayLog(date, isTrainingDay),
       targetsSet: hasTargets(),
       programSet: hasProgram(),
+      scheduleSet: hasSchedule(),
       session: hasProgram() ? getTodaySession(date) : null,
     };
   }, [date]);
 
-  const { day, targetsSet, programSet, session } = data;
+  const { day, targetsSet, programSet, scheduleSet, session } = data;
   const left = remaining(day.target, day.consumed);
 
   return (
@@ -134,6 +136,13 @@ export default function TodayScreen() {
               body="أضف أيام برنامجك لتبدأ تسجيل التمارين."
               href="/settings/program"
               action="افتح محرّر البرنامج"
+            />
+          ) : !scheduleSet ? (
+            <EmptyPrompt
+              title="حدّد أيام التمرين"
+              body="برنامجك جاهز، لكن لم تُحدَّد أيام الأسبوع بعد."
+              href="/settings/program"
+              action="افتح جدول الأسبوع"
             />
           ) : session?.kind === 'rest' ? (
             <Card>

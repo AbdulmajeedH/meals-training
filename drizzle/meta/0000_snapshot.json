@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "e56d135f-8194-4bad-a2b4-b3340c731e6e",
+  "id": "e4cb721e-b720-4518-bc9b-8b4a39ed9cb9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "body_weight": {
@@ -193,6 +193,14 @@
           "notNull": true,
           "autoincrement": false,
           "default": 120
+        },
+        "rep_unit": {
+          "name": "rep_unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'reps'"
         },
         "notes": {
           "name": "notes",

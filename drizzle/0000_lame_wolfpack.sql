@@ -28,6 +28,7 @@ CREATE TABLE `exercises` (
 	`rep_min` integer NOT NULL,
 	`rep_max` integer NOT NULL,
 	`rest_sec` integer DEFAULT 120 NOT NULL,
+	`rep_unit` text DEFAULT 'reps' NOT NULL,
 	`notes` text,
 	`sort` integer DEFAULT 0 NOT NULL,
 	`archived` integer DEFAULT false NOT NULL,

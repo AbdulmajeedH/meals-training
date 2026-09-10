@@ -1,12 +1,13 @@
 /**
- * Applies the migration to a real SQLite database and replays the seeded
- * nutrition plan against it.
+ * Applies the migration to a real SQLite database and replays both seeds — the
+ * nutrition plan and the training program — against it.
  *
- * plan-data.test.ts checks the plan's arithmetic; this checks that the plan can
- * actually be written — foreign keys resolve, the (template_id, slot) unique
- * index holds, and the day log reads back the macros the plan intends. Those
- * are constraint failures that only appear at insert time, and on a phone they
- * would appear on first launch.
+ * The *-data.test.ts files check the seeds' arithmetic and structure; this
+ * checks they can actually be written. Foreign keys resolve, the
+ * (template_id, slot) unique index holds, the day totals read back through SQL
+ * as the plan intends, opening a training day pre-fills the right number of
+ * sets, and the plank keeps its unit. Those failures only appear at insert
+ * time, and on a phone they would appear on first launch.
  *
  *   node --experimental-strip-types scripts/seed-check.mjs
  */
@@ -14,6 +15,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, readdirSync } from 'node:fs';
 
 import { FOODS, MEALS, TARGET, TEMPLATES, templateTotals } from '../src/db/seed/plan-data.ts';
+import { PROGRAM_DAYS } from '../src/db/seed/program-data.ts';
 
 const db = new DatabaseSync(':memory:');
 db.exec('PRAGMA foreign_keys = ON;');
@@ -138,6 +140,81 @@ const unused = db
   .all();
 if (unused.length > 0) fail(`unused foods: ${unused.map((r) => r.name_ar).join(', ')}`);
 else console.log('ok  every seeded food is used by a meal');
+
+/* ---------------------------------------------------------- the program */
+
+const insertDay = db.prepare('INSERT INTO program_days (name, sort, archived) VALUES (?, ?, 0)');
+const insertExercise = db.prepare(
+  'INSERT INTO exercises (program_day_id, name, sets, rep_min, rep_max, rest_sec, rep_unit, notes, sort, archived) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
+);
+
+const dayIds = new Map();
+PROGRAM_DAYS.forEach((day, dayIndex) => {
+  const id = Number(insertDay.run(day.name, dayIndex).lastInsertRowid);
+  dayIds.set(day.key, id);
+  day.exercises.forEach((exercise, index) => {
+    insertExercise.run(
+      id,
+      exercise.name,
+      exercise.sets,
+      exercise.repMin,
+      exercise.repMax,
+      exercise.restSec,
+      exercise.repUnit ?? 'reps',
+      exercise.notes,
+      index,
+    );
+  });
+});
+
+const exerciseCount = db.prepare('SELECT count(*) c FROM exercises').get().c;
+const expectedExercises = PROGRAM_DAYS.reduce((total, day) => total + day.exercises.length, 0);
+console.log('seeded:', PROGRAM_DAYS.length, 'program days,', exerciseCount, 'exercises');
+if (exerciseCount !== expectedExercises) {
+  fail(`expected ${expectedExercises} exercises, found ${exerciseCount}`);
+}
+
+// The schedule must stay empty: the program never says which weekdays to train,
+// so seeding one would be invented data.
+const scheduled = db.prepare('SELECT count(*) c FROM program_schedule').get().c;
+if (scheduled !== 0) fail('the seed assigned weekdays the program does not specify');
+else console.log('ok  weekly schedule left for the user to choose');
+
+// Simulate opening Day 01: create the session and pre-fill every set, the way
+// ensureSession does. This is what happens on the first tap of the app.
+const day01 = dayIds.get('day01');
+const sessionId = Number(
+  db
+    .prepare("INSERT INTO workout_sessions (date, program_day_id, status) VALUES ('2026-09-12', ?, 'planned')")
+    .run(day01).lastInsertRowid,
+);
+const planned = db
+  .prepare('SELECT id, sets, rep_min FROM exercises WHERE program_day_id = ? ORDER BY sort')
+  .all(day01);
+const insertSet = db.prepare(
+  'INSERT INTO set_logs (session_id, exercise_id, set_no, weight_kg, reps, done) VALUES (?, ?, ?, NULL, ?, 0)',
+);
+for (const exercise of planned) {
+  for (let setNo = 1; setNo <= exercise.sets; setNo++) {
+    insertSet.run(sessionId, exercise.id, setNo, exercise.rep_min);
+  }
+}
+
+const setCount = db.prepare('SELECT count(*) c FROM set_logs WHERE session_id = ?').get(sessionId).c;
+const expectedSets = PROGRAM_DAYS[0].exercises.reduce((total, e) => total + e.sets, 0);
+if (setCount !== expectedSets) fail(`Day 01 pre-filled ${setCount} sets, expected ${expectedSets}`);
+else console.log('ok  opening Day 01 pre-fills', setCount, 'sets');
+
+// The plank's 60 must be stored as a duration, not mistaken for 60 reps.
+const plank = db.prepare("SELECT rep_unit, rep_min FROM exercises WHERE name = 'Plank'").get();
+if (!plank || plank.rep_unit !== 'seconds' || plank.rep_min !== 60) {
+  fail('the plank is not stored as a 60 second hold');
+} else {
+  console.log('ok  plank stored as a 60 second hold');
+}
+
+const fkAfterProgram = db.prepare('PRAGMA foreign_key_check').all();
+if (fkAfterProgram.length > 0) fail(`${fkAfterProgram.length} foreign key violations after program`);
 
 console.log(failures === 0 ? '\nALL SEED CHECKS PASSED' : `\n${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);

@@ -27,6 +27,13 @@ export type MealStatus = 'planned' | 'confirmed' | 'changed' | 'skipped';
 export type SessionStatus = 'planned' | 'in_progress' | 'completed' | 'skipped';
 export type MissedReason = 'travel' | 'work' | 'no_food' | 'tired' | 'other';
 
+/**
+ * Most sets are counted in reps; holds like a plank are counted in seconds.
+ * Without this the two are indistinguishable in `set_logs.reps`, and a 60-second
+ * plank renders as "60 reps".
+ */
+export type RepUnit = 'reps' | 'seconds';
+
 const now = () => Date.now();
 
 /* ------------------------------------------------------------------ targets */
@@ -178,6 +185,8 @@ export const exercises = sqliteTable(
     repMin: integer('rep_min').notNull(),
     repMax: integer('rep_max').notNull(),
     restSec: integer('rest_sec').notNull().default(120),
+    /** What rep_min/rep_max and set_logs.reps are measured in. */
+    repUnit: text('rep_unit').$type<RepUnit>().notNull().default('reps'),
     notes: text('notes'),
     sort: integer('sort').notNull().default(0),
     /** Same reasoning as program_days: archived once it has logged sets. */

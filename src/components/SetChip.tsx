@@ -15,6 +15,8 @@ import { radius, space, spring, useColors } from '@/theme';
 
 type Props = {
   set: SetResult;
+  /** Holds (a plank) are a duration; everything else is weight x reps. */
+  repUnit?: 'reps' | 'seconds';
   onToggle: () => void;
   onEdit: () => void;
 };
@@ -25,7 +27,7 @@ type Props = {
  * Tap confirms it as done — that is the whole logging interaction for a normal
  * set. Long-press is the escape hatch for the day reality differed.
  */
-export function SetChip({ set, onToggle, onEdit }: Props) {
+export function SetChip({ set, repUnit = 'reps', onToggle, onEdit }: Props) {
   const colors = useColors();
   const reduceMotion = useReducedMotion();
   const fill = useSharedValue(set.done ? 1 : 0);
@@ -43,6 +45,7 @@ export function SetChip({ set, onToggle, onEdit }: Props) {
   });
 
   const empty = set.weightKg == null && set.reps == null;
+  const timed = repUnit === 'seconds';
 
   return (
     <PressableScale
@@ -68,17 +71,28 @@ export function SetChip({ set, onToggle, onEdit }: Props) {
         <Text variant="caption" color={set.done ? 'bg' : 'textFaint'}>
           {n(set.setNo)}
         </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-          <Text variant="heading" color={set.done ? 'bg' : 'text'}>
-            {empty ? '—' : set.weightKg == null ? '؟' : d(set.weightKg)}
-          </Text>
-          <Text variant="caption" color={set.done ? 'bg' : 'textDim'}>
-            ×
-          </Text>
-          <Text variant="heading" color={set.done ? 'bg' : 'text'}>
-            {set.reps == null ? '—' : n(set.reps)}
-          </Text>
-        </View>
+        {timed ? (
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+            <Text variant="heading" color={set.done ? 'bg' : 'text'}>
+              {set.reps == null ? '—' : n(set.reps)}
+            </Text>
+            <Text variant="caption" color={set.done ? 'bg' : 'textDim'}>
+              ث
+            </Text>
+          </View>
+        ) : (
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+            <Text variant="heading" color={set.done ? 'bg' : 'text'}>
+              {empty ? '—' : set.weightKg == null ? '؟' : d(set.weightKg)}
+            </Text>
+            <Text variant="caption" color={set.done ? 'bg' : 'textDim'}>
+              ×
+            </Text>
+            <Text variant="heading" color={set.done ? 'bg' : 'text'}>
+              {set.reps == null ? '—' : n(set.reps)}
+            </Text>
+          </View>
+        )}
       </Animated.View>
     </PressableScale>
   );
