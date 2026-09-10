@@ -11,9 +11,19 @@ type Row = { href: string; title: string; subtitle: string };
 
 const ROWS: Row[] = [
   {
+    href: '/settings/targets',
+    title: 'الأهداف',
+    subtitle: 'السعرات والماكروز لكل نوع يوم',
+  },
+  {
     href: '/settings/program',
     title: 'محرّر البرنامج',
     subtitle: 'أيام البرنامج، التمارين، وجدول الأسبوع',
+  },
+  {
+    href: '/settings/templates',
+    title: 'قوالب الأيام',
+    subtitle: 'يوم كامل من الوجبات، يُعاد استخدامه',
   },
 ];
 
