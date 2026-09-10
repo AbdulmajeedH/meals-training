@@ -10,7 +10,9 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test src/lib/*.test.ts",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "db:check": "node scripts/schema-check.mjs",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run db:check"
   },
   "dependencies": {
     "@expo-google-fonts/ibm-plex-sans-arabic": "^0.4.2",
@@ -44,6 +46,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
+    "@types/node": "^22.20.2",
     "@types/react": "~19.2.2",
     "babel-plugin-inline-import": "^3.0.0",
     "babel-preset-expo": "^57.0.11",

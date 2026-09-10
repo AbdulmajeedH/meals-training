@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "3fd6531d-7b93-4df4-8834-019ce33c4a77",
+  "id": "e56d135f-8194-4bad-a2b4-b3340c731e6e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "body_weight": {
@@ -208,6 +208,14 @@
           "notNull": true,
           "autoincrement": false,
           "default": 0
+        },
+        "archived": {
+          "name": "archived",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         }
       },
       "indexes": {
@@ -681,6 +689,14 @@
           "notNull": true,
           "autoincrement": false,
           "default": 0
+        },
+        "archived": {
+          "name": "archived",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         }
       },
       "indexes": {},

@@ -30,6 +30,7 @@ CREATE TABLE `exercises` (
 	`rest_sec` integer DEFAULT 120 NOT NULL,
 	`notes` text,
 	`sort` integer DEFAULT 0 NOT NULL,
+	`archived` integer DEFAULT false NOT NULL,
 	FOREIGN KEY (`program_day_id`) REFERENCES `program_days`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -99,7 +100,8 @@ CREATE TABLE `personal_bests` (
 CREATE TABLE `program_days` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,
-	`sort` integer DEFAULT 0 NOT NULL
+	`sort` integer DEFAULT 0 NOT NULL,
+	`archived` integer DEFAULT false NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `program_schedule` (

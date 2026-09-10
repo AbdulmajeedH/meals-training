@@ -157,6 +157,13 @@ export const programDays = sqliteTable('program_days', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   sort: integer('sort').notNull().default(0),
+  /**
+   * Retired days are hidden from the schedule but still resolve for past
+   * sessions. Sessions reference this table with ON DELETE RESTRICT, so once a
+   * day has been trained it is archived rather than deleted — losing training
+   * history to an edit would be far worse than a stale row.
+   */
+  archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
 });
 
 export const exercises = sqliteTable(
@@ -173,6 +180,8 @@ export const exercises = sqliteTable(
     restSec: integer('rest_sec').notNull().default(120),
     notes: text('notes'),
     sort: integer('sort').notNull().default(0),
+    /** Same reasoning as program_days: archived once it has logged sets. */
+    archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
   },
   (t) => [index('exercises_day_idx').on(t.programDayId)],
 );
